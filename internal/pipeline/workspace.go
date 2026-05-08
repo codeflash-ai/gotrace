@@ -113,8 +113,23 @@ func (w *Workspace) InjectTracerPackage(tracerSrcDir string) error {
 		}
 	}
 
-	goMod := "module gotrace_tracer_runtime\n\ngo 1.26\n"
+	goVersion := w.detectGoVersion()
+	goMod := "module gotrace_tracer_runtime\n\ngo " + goVersion + "\n"
 	return os.WriteFile(filepath.Join(dstDir, "go.mod"), []byte(goMod), 0644)
+}
+
+func (w *Workspace) detectGoVersion() string {
+	data, err := os.ReadFile(filepath.Join(w.dir, "go.mod"))
+	if err != nil {
+		return "1.21"
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "go ") {
+			return strings.TrimPrefix(line, "go ")
+		}
+	}
+	return "1.21"
 }
 
 func (w *Workspace) UpdateGoMod() error {
